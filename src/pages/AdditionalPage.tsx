@@ -65,7 +65,6 @@ export function AdditionalPage() {
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="500"
           />
         </label>
         <label className="field">

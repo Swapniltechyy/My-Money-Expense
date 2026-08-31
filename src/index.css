@@ -88,6 +88,13 @@ h1, h2, h3, p { margin: 0; }
   font-weight: 700;
   letter-spacing: -0.03em;
 }
+.brand-btn {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
 
 .icon-btn {
   width: 40px;
@@ -205,11 +212,11 @@ h1, h2, h3, p { margin: 0; }
 .expense-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 18px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
-  padding: 6px 4px 6px 8px;
+  padding: 6px 2px 6px 8px;
   animation: rise 240ms ease;
 }
 .expense-main {
@@ -222,7 +229,7 @@ h1, h2, h3, p { margin: 0; }
   border: 0;
   background: transparent;
   text-align: left;
-  padding: 6px 0 6px 6px;
+  padding: 6px 2px 6px 6px;
 }
 .expense-copy { min-width: 0; }
 .expense-copy strong,
@@ -232,12 +239,13 @@ h1, h2, h3, p { margin: 0; }
   white-space: nowrap;
 }
 .expense-copy p { color: var(--muted); font-size: 13px; }
-.expense-total { font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; }
+.expense-total { font-weight: 800; letter-spacing: -0.03em; white-space: nowrap; padding-right: 2px; }
 .expense-actions {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  gap: 2px;
+  gap: 0;
+  margin-left: auto;
 }
 .plus-btn {
   width: 36px;
@@ -280,6 +288,18 @@ h1, h2, h3, p { margin: 0; }
   border-radius: 12px;
   padding: 11px 12px;
   outline: none;
+}
+.field input:disabled {
+  opacity: 1;
+  color: var(--text);
+  cursor: default;
+}
+.field input[type='date'] {
+  border: 0;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 0;
+  min-height: 44px;
 }
 .quick-bar input { background: var(--bg); }
 .quick-error, .quick-hint { grid-column: 1 / -1; margin: 0; font-size: 13px; }
@@ -535,12 +555,6 @@ h1, h2, h3, p { margin: 0; }
 .row-actions.tight { flex-direction: column; gap: 0; }
 .text-link { border: 0; background: none; color: var(--header); font-weight: 700; padding: 0; }
 .error { color: var(--spend); font-size: 13px; font-weight: 600; }
-.locked-stamp {
-  margin: 0;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 600;
-}
 .hint { color: var(--muted); font-size: 13px; }
 
 .detail-hero {
@@ -576,6 +590,14 @@ h1, h2, h3, p { margin: 0; }
 .card h2 { font-size: 16px; margin-bottom: 12px; }
 .card h2 + .muted { margin: -6px 0 12px; }
 .card .btn-block + .btn-block { margin-top: 8px; }
+.budget-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.budget-card h2 { margin-bottom: 0; }
+.budget-card h2 + .muted { margin: 0; }
+.budget-card .btn-block { margin-top: 4px; }
 .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
 .summary-card, .overview-grid div {
   background: var(--surface);
@@ -655,9 +677,22 @@ h1, h2, h3, p { margin: 0; }
 .action-sheet button { border: 0; background: var(--bg); border-radius: 12px; padding: 12px; font-weight: 700; }
 
 .toast {
-  position: fixed; left: 50%; bottom: 108px; transform: translateX(-50%);
-  background: var(--header); color: #fff; padding: 10px 16px; border-radius: 999px; z-index: 50;
-  animation: rise 200ms ease;
+  position: fixed;
+  left: 50%;
+  bottom: 108px;
+  transform: translateX(-50%);
+  background: var(--header);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 999px;
+  z-index: 80;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 12px 32px rgba(24, 39, 56, 0.22);
+  animation: toast-in 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.toast.leave {
+  animation: toast-out 320ms ease-in both;
 }
 .banner {
   margin: 0 16px 10px; padding: 10px 12px; border-radius: 12px; font-weight: 700; font-size: 13px;
@@ -741,6 +776,26 @@ h1, h2, h3, p { margin: 0; }
   .toast { bottom: 32px; }
 }
 
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(18px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+@keyframes toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.96);
+  }
+}
 @keyframes rise {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }

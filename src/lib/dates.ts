@@ -36,6 +36,15 @@ export function currentMonthBounds(): { startDate: string; endDate: string } {
   }
 }
 
+export function fromTodayBounds(): { startDate: string; endDate: string } {
+  const startDate = todayISO()
+  const monthEnd = toISODate(endOfMonth())
+  return {
+    startDate,
+    endDate: monthEnd < startDate ? startDate : monthEnd,
+  }
+}
+
 export function startOfDay(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate())
 }

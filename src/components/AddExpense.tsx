@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { formatINR, parseAmount } from '../lib/currency'
-import { formatTime, nowTime, shortDate, todayISO } from '../lib/dates'
+import { nowTime, todayISO } from '../lib/dates'
 import { useStore } from '../lib/store'
 import type { CategoryId, ExpenseItem } from '../types'
 import { CategoryGlyph } from './CategoryGlyph'
@@ -109,7 +109,6 @@ export function AddExpense({
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Lays"
             autoComplete="off"
           />
         </label>
@@ -124,7 +123,6 @@ export function AddExpense({
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="20"
           />
         </label>
 
@@ -134,10 +132,6 @@ export function AddExpense({
           customName={customCategoryName}
           onCustomName={setCustomCategoryName}
         />
-
-        <p className="locked-stamp">
-          Date & time are set automatically · {shortDate(todayISO())} {formatTime(nowTime())}
-        </p>
 
         <label className="field">
           <span>Notes (optional)</span>
@@ -149,7 +143,6 @@ export function AddExpense({
             inputMode="numeric"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            placeholder="1"
           />
         </label>
 

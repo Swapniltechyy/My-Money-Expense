@@ -4,6 +4,7 @@ import { ExpenseDetail } from './components/ExpenseDetail'
 import { IconClose, IconHome, IconHistory, IconPlus, IconSettings, IconChart, IconWallet, IconPeople } from './components/Icons'
 import { QuickAdd } from './components/QuickAdd'
 import { ConfirmDialog } from './components/Sheet'
+import { ToastNotice } from './components/Toast'
 import { StoreProvider, useStore } from './lib/store'
 import { AdditionalPage } from './pages/AdditionalPage'
 import { AnalyticsPage } from './pages/AnalyticsPage'
@@ -54,11 +55,22 @@ function ThemedApp() {
     if (detailItemId && !detailItem) setDetailItemId(null)
   }, [detailItem, detailItemId])
 
+  function goHome() {
+    setTab('home')
+    setMenuOpen(false)
+    setDetailItemId(null)
+    setItemMenu(null)
+    setAddOpen(false)
+    setAddDraft(null)
+    setQuickItem(null)
+    window.scrollTo(0, 0)
+  }
+
   return (
     <div className="shell">
       <div className="frame">
         <nav className="bottom-nav" aria-label="Primary">
-          <button className={tab === 'home' ? 'active' : ''} onClick={() => setTab('home')}>
+          <button className={tab === 'home' ? 'active' : ''} onClick={goHome}>
             <IconHome />
             Home
           </button>
@@ -89,6 +101,7 @@ function ThemedApp() {
           {tab === 'home' ? (
             <HomePage
               onMenu={() => setMenuOpen(true)}
+              onHero={goHome}
               onAnalytics={() => setTab('analytics')}
               onBudget={() => setTab('budget')}
               onAdd={(draft) => {
@@ -104,7 +117,7 @@ function ThemedApp() {
           {tab === 'budget' ? <BudgetPage /> : null}
           {tab === 'additional' ? <AdditionalPage /> : null}
           {tab === 'settings' ? <SettingsPage /> : null}
-          {tab === 'analytics' ? <AnalyticsPage onClose={() => setTab('home')} /> : null}
+          {tab === 'analytics' ? <AnalyticsPage onClose={goHome} /> : null}
         </div>
       </div>
 
@@ -118,12 +131,7 @@ function ThemedApp() {
                 <IconClose />
               </button>
             </header>
-            <button
-              onClick={() => {
-                setTab('home')
-                setMenuOpen(false)
-              }}
-            >
+            <button onClick={goHome}>
               <IconHome /> Home
             </button>
             <button
@@ -150,12 +158,7 @@ function ThemedApp() {
             >
               <IconHistory /> History
             </button>
-            <button
-              onClick={() => {
-                setTab('additional')
-                setMenuOpen(false)
-              }}
-            >
+            <button onClick={goHome}>
               <IconPeople /> Additional
             </button>
             <button
@@ -229,7 +232,7 @@ function ThemedApp() {
           setItemMenu(null)
         }}
       />
-      {toast ? <div className="toast">{toast.message}</div> : null}
+      <ToastNotice toast={toast} />
     </div>
   )
 }

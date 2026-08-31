@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { formatINR, parseAmount } from '../lib/currency'
 import { purchasesInPeriod, remainingMoney, sumAmounts } from '../lib/calc'
-import { currentMonthBounds, monthLabel } from '../lib/dates'
+import { fromTodayBounds, monthLabel, todayISO } from '../lib/dates'
 import { useStore } from '../lib/store'
 import { ConfirmDialog } from '../components/Sheet'
 import { WasHistory } from '../components/WasHistory'
@@ -17,12 +17,16 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
     updateSettings,
   } = useStore()
   const period = metrics.period
-  const [amount, setAmount] = useState(period ? String(period.amount) : '15000')
-  const [startDate, setStartDate] = useState(period?.startDate ?? currentMonthBounds().startDate)
-  const [endDate, setEndDate] = useState(period?.endDate ?? currentMonthBounds().endDate)
+  const fromDate = todayISO()
+  const [amount, setAmount] = useState('')
+  const [endDate, setEndDate] = useState(() => {
+    const fallback = fromTodayBounds().endDate
+    const saved = period?.endDate
+    return saved && saved >= fromDate ? saved : fallback
+  })
   const [error, setError] = useState('')
   const [confirmPeriod, setConfirmPeriod] = useState<string | null>(null)
-  const [newAmount, setNewAmount] = useState(period ? String(period.amount) : '15000')
+  const [newAmount, setNewAmount] = useState('')
 
   function saveCurrent() {
     const value = parseAmount(amount)
@@ -30,12 +34,13 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
       setError('Enter an amount greater than zero.')
       return
     }
-    if (endDate < startDate) {
-      setError('End date must be on or after the start date.')
+    if (endDate < fromDate) {
+      setError('End date must be on or after today.')
       return
     }
-    updatePeriod({ amount: value, startDate, endDate })
+    updatePeriod({ amount: value, startDate: fromDate, endDate })
     setError('')
+    if (!embedded) setAmount('')
   }
 
   function startNew() {
@@ -44,11 +49,11 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
       setError('Enter an amount greater than zero.')
       return
     }
-    const bounds = currentMonthBounds()
-    startNewPeriod(value, bounds.startDate, bounds.endDate)
-    setStartDate(bounds.startDate)
-    setEndDate(bounds.endDate)
-    setAmount(String(value))
+    const bounds = fromTodayBounds()
+    startNewPeriod(value, bounds.startDate, endDate >= bounds.startDate ? endDate : bounds.endDate)
+    setEndDate(endDate >= bounds.startDate ? endDate : bounds.endDate)
+    setAmount('')
+    setNewAmount('')
   }
 
   return (
@@ -60,7 +65,8 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
       ) : null}
       {embedded ? null : <h1 className="page-title">Budget</h1>}
 
-      <section className="card">
+      {embedded ? null : (
+      <section className="card budget-card">
         <h2>Monthly budget</h2>
         <p className="muted">Your usual money for this month.</p>
         <label className="field">
@@ -71,11 +77,16 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
         <div className="field-row">
           <label className="field">
             <span>From</span>
-            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <input type="date" value={fromDate} disabled readOnly aria-readonly="true" />
           </label>
           <label className="field">
             <span>To</span>
-            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <input
+              type="date"
+              min={fromDate}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+            />
           </label>
         </div>
         {error ? <p className="error">{error}</p> : null}
@@ -86,6 +97,7 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
           <p className="hint">Includes {formatINR(period.carryOverApplied)} carried over from last period.</p>
         ) : null}
       </section>
+      )}
 
       <section className="card">
         <h2>Carry over</h2>

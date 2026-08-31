@@ -65,6 +65,7 @@ export interface BudgetPeriod {
   id: string
   amount: number
   amountHistory: number[]
+  extraFunds: boolean
   carryOverApplied: number
   startDate: string
   endDate: string

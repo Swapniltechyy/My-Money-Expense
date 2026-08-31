@@ -1,6 +1,6 @@
 import { DEFAULT_BUDGET, STORAGE_KEY } from '../constants'
 import type { AppData, AppSettings, BudgetPeriod } from '../types'
-import { currentMonthBounds } from './dates'
+import { fromTodayBounds } from './dates'
 import { createId } from './id'
 
 type StoredPeriod = BudgetPeriod & { previousAmount?: number | null }
@@ -14,6 +14,7 @@ function normalizePeriod(p: StoredPeriod): BudgetPeriod {
       id: p.id,
       amount: p.amount,
       amountHistory: [p.previousAmount],
+      extraFunds: p.extraFunds ?? true,
       carryOverApplied: p.carryOverApplied ?? 0,
       startDate: p.startDate,
       endDate: p.endDate,
@@ -24,6 +25,7 @@ function normalizePeriod(p: StoredPeriod): BudgetPeriod {
     id: p.id,
     amount: p.amount,
     amountHistory: history,
+    extraFunds: p.extraFunds ?? history.length > 0,
     carryOverApplied: p.carryOverApplied ?? 0,
     startDate: p.startDate,
     endDate: p.endDate,
@@ -44,13 +46,14 @@ export function defaultSettings(): AppSettings {
 
 export function createPeriod(
   amount = DEFAULT_BUDGET,
-  bounds = currentMonthBounds(),
+  bounds = fromTodayBounds(),
   carryOverApplied = 0,
 ): BudgetPeriod {
   return {
     id: createId(),
     amount,
     amountHistory: [],
+    extraFunds: false,
     carryOverApplied,
     startDate: bounds.startDate,
     endDate: bounds.endDate,
@@ -73,6 +76,21 @@ export function createInitialData(): AppData {
   }
 }
 
+function clearUnusedFactoryBudget(data: AppData): AppData {
+  const onlyDefaultPeriod = data.periods.length === 1
+  const noPurchases = data.purchases.length === 0
+  if (!onlyDefaultPeriod || !noPurchases) return data
+  return {
+    ...data,
+    periods: data.periods.map((p) => {
+      if (p.amount !== 15000) return p
+      if ((p.amountHistory?.length ?? 0) > 0) return p
+      if (p.extraFunds) return p
+      return { ...p, amount: 0 }
+    }),
+  }
+}
+
 export function loadData(): AppData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -82,7 +100,7 @@ export function loadData(): AppData {
       return createInitialData()
     }
     const { occasionBudgets: _unused, ...rest } = parsed
-    return {
+    return clearUnusedFactoryBudget({
       ...createInitialData(),
       ...rest,
       settings: { ...defaultSettings(), ...parsed.settings },
@@ -92,7 +110,7 @@ export function loadData(): AppData {
       periods: Array.isArray(parsed.periods)
         ? parsed.periods.map((p) => normalizePeriod(p as StoredPeriod))
         : createInitialData().periods,
-    }
+    })
   } catch {
     return createInitialData()
   }

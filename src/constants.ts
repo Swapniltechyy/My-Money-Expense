@@ -31,4 +31,4 @@ export const CATEGORIES: Record<
 
 export const CATEGORY_LIST = Object.values(CATEGORIES)
 
-export const DEFAULT_BUDGET = 15000
+export const DEFAULT_BUDGET = 0

@@ -174,12 +174,17 @@ function reducer(data: AppData, action: Action): AppData {
         ...data,
         periods: data.periods.map((p) => {
           if (p.id !== data.currentPeriodId) return p
+          const nextEnd = action.patch.endDate ?? p.endDate
+          const sameDays = nextEnd === p.endDate
           const nextAmount = action.patch.amount
-          const amountHistory =
-            nextAmount !== undefined && nextAmount !== p.amount
-              ? [p.amount, ...(p.amountHistory ?? [])]
-              : (p.amountHistory ?? [])
-          return { ...p, ...action.patch, amountHistory }
+          const amountChanged = nextAmount !== undefined && nextAmount !== p.amount
+          const addedOnSameDays =
+            amountChanged && nextAmount !== undefined && nextAmount > p.amount && sameDays
+          const amountHistory = amountChanged
+            ? [p.amount, ...(p.amountHistory ?? [])]
+            : (p.amountHistory ?? [])
+          const extraFunds = sameDays ? p.extraFunds || addedOnSameDays : false
+          return { ...p, ...action.patch, amountHistory, extraFunds }
         }),
       }
     }
@@ -324,7 +329,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setToast({ id, message })
     window.setTimeout(() => {
       setToast((current) => (current?.id === id ? null : current))
-    }, 2400)
+    }, 2600)
   }, [])
 
   const metrics = useMemo(() => dashboardMetrics(data), [data])
@@ -379,7 +384,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'deleteItem', itemId })
         notify('Expense removed')
       },
-      updatePeriod: (patch) => dispatch({ type: 'updatePeriod', patch }),
+      updatePeriod: (patch) => {
+        dispatch({ type: 'updatePeriod', patch })
+        notify('Budget saved')
+      },
       startNewPeriod: (amount, startDate, endDate) => {
         dispatch({ type: 'startNewPeriod', amount, startDate, endDate })
         notify('New budget period started')

@@ -9,6 +9,7 @@ import { WasHistory } from '../components/WasHistory'
 
 export function HomePage({
   onMenu,
+  onHero,
   onAnalytics,
   onBudget,
   onAdd,
@@ -17,6 +18,7 @@ export function HomePage({
   onItemMenu,
 }: {
   onMenu: () => void
+  onHero: () => void
   onAnalytics: () => void
   onBudget: () => void
   onAdd: (draft?: { name?: string; amount?: string; category?: CategoryId }) => void
@@ -27,6 +29,7 @@ export function HomePage({
   const { metrics, ready, data } = useStore()
   const { period, spent, remaining, daysLeft, safeDaily, status, groups } = metrics
   const remainingTone = remaining < 0 ? 'spend' : 'remain'
+  const budgetReady = (period?.amount ?? 0) > 0
 
   if (!ready) {
     return (
@@ -43,7 +46,11 @@ export function HomePage({
         <button className="icon-btn light" onClick={onMenu} aria-label="Menu">
           <IconMenu />
         </button>
-        <h1>My Money</h1>
+        <h1>
+          <button type="button" className="brand-btn" onClick={onHero} aria-label="Monthly Money">
+            My Money
+          </button>
+        </h1>
         <button className="icon-btn light" onClick={onAnalytics} aria-label="Analytics">
           <IconChart />
         </button>
@@ -53,7 +60,7 @@ export function HomePage({
         <div className="money-top">
           <div>
             <p className="kicker">Monthly Money</p>
-            <p className="money-lg">{formatINR(metrics.budget)}</p>
+            <p className={`money-lg${period?.extraFunds ? ' spend' : ''}`}>{formatINR(metrics.budget)}</p>
             {period?.amountHistory?.length ? <WasHistory amounts={period.amountHistory} /> : null}
           </div>
           <button className="pill-btn" onClick={onBudget}>
@@ -64,7 +71,7 @@ export function HomePage({
           <div>
             <p className="muted">Days Left</p>
             <p className="metric-value">
-              {daysLeft}
+              {budgetReady ? daysLeft : '—'}
               <button className="icon-btn tiny" onClick={onBudget} aria-label="Budget calendar">
                 <IconCalendar size={16} />
               </button>
@@ -76,17 +83,19 @@ export function HomePage({
           </div>
           <div>
             <p className="muted">Remaining</p>
-            <p className={`metric-value ${remainingTone}`}>{formatINR(remaining)}</p>
+            <p className={`metric-value ${budgetReady ? remainingTone : ''}`}>
+              {budgetReady ? formatINR(remaining) : '—'}
+            </p>
           </div>
         </div>
         <div className="safe-box">
           <p className="muted">Safe to Spend Daily</p>
           <p className="safe-value">
-            {daysLeft === 0 && remaining <= 0 ? '—' : formatINR(safeDaily)}
+            {budgetReady ? formatINR(safeDaily) : '—'}
           </p>
           <p className={`status-label ${status.level}`}>{status.label}</p>
         </div>
-        {period ? (
+        {budgetReady && period ? (
           <p className="period-caption">
             {monthLabel(period.startDate)} · {shortDate(period.startDate)} – {shortDate(period.endDate)}
           </p>
@@ -96,7 +105,7 @@ export function HomePage({
       {data.settings.notifyBudgetWarnings && status.level !== 'healthy' ? (
         <div className={`banner ${status.level}`}>{status.label}</div>
       ) : null}
-      {data.settings.notifyDailyReminders ? (
+      {data.settings.notifyDailyReminders && metrics.budget > 0 ? (
         <div className="banner info">Safe to spend {formatINR(safeDaily)} today.</div>
       ) : null}
 

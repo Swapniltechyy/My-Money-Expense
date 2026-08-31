@@ -68,7 +68,6 @@ export function QuickAdd({
               inputMode="decimal"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              placeholder="20"
             />
           </label>
           <button type="button" className="text-link" onClick={() => setMore((v) => !v)}>
