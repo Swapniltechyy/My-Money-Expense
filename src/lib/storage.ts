@@ -7,7 +7,7 @@ type StoredPeriod = BudgetPeriod & { previousAmount?: number | null }
 
 function normalizePeriod(p: StoredPeriod): BudgetPeriod {
   const history = Array.isArray(p.amountHistory)
-    ? p.amountHistory.filter((n) => Number.isFinite(n))
+    ? p.amountHistory.filter((n) => Number.isFinite(n) && n > 0)
     : []
   if (history.length === 0 && p.previousAmount && p.previousAmount > 0) {
     return {
@@ -25,7 +25,7 @@ function normalizePeriod(p: StoredPeriod): BudgetPeriod {
     id: p.id,
     amount: p.amount,
     amountHistory: history,
-    extraFunds: p.extraFunds ?? history.length > 0,
+    extraFunds: Boolean(p.extraFunds) && history.length > 0,
     carryOverApplied: p.carryOverApplied ?? 0,
     startDate: p.startDate,
     endDate: p.endDate,

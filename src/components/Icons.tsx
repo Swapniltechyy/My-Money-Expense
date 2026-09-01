@@ -113,6 +113,29 @@ export function IconWallet(p: IconProps) {
 export function IconCheck(p: IconProps) {
   return wrap(p, <path d="M5 12.5l5 5L19 7" />)
 }
+export function IconEye(p: IconProps) {
+  return wrap(p, <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" />)
+}
+export function IconEyeOff(p: IconProps) {
+  return wrap(
+    p,
+    <>
+      <path d="M3 3l18 18" />
+      <path d="M10.6 10.6A3 3 0 0 0 12 15a3 3 0 0 0 2.4-4.4" />
+      <path d="M9.9 5.1A11 11 0 0 1 12 5c6.5 0 10 7 10 7a18 18 0 0 1-3.2 4.1" />
+      <path d="M6.1 6.1C3.7 7.8 2 12 2 12s3.5 7 10 7c1.4 0 2.7-.3 3.9-.8" />
+    </>,
+  )
+}
+export function IconPower(p: IconProps) {
+  return wrap(
+    p,
+    <>
+      <path d="M12 3v9" />
+      <path d="M7.05 6.05a8 8 0 1 0 9.9 0" />
+    </>,
+  )
+}
 export function IconPeople(p: IconProps) {
   return wrap(
     p,

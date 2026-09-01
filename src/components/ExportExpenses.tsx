@@ -3,13 +3,11 @@ import { CategoryGlyph } from './CategoryGlyph'
 import { Sheet } from './Sheet'
 import {
   categoryExportSummaries,
-  downloadTextFile,
+  downloadPdf,
   exportRows,
-  rowsToCsv,
   slugLabel,
   type ExportScope,
 } from '../lib/export'
-import { exportJson } from '../lib/storage'
 import { formatINR } from '../lib/currency'
 import { formatTime, shortDate } from '../lib/dates'
 import { useStore } from '../lib/store'
@@ -37,23 +35,18 @@ export function ExportExpenses({ open, onClose }: { open: boolean; onClose: () =
     onClose()
   }
 
-  function downloadCsv() {
+  function downloadExpensesPdf() {
     if (!scope) return
     const label = scope === 'all' ? 'all-over' : slugLabel(title)
-    downloadTextFile(rowsToCsv(rows), `my-money-${label}.csv`, 'text/csv;charset=utf-8')
-    notify(`${title} expenses downloaded`)
-  }
-
-  function downloadFullBackup() {
-    downloadTextFile(exportJson(data), 'my-money-backup.json', 'application/json')
-    notify('Full backup downloaded')
+    downloadPdf(rows, title, scope, `my-money-${label}.pdf`)
+    notify(`${title} expenses downloaded as PDF`)
   }
 
   return (
     <Sheet open={open} onClose={close} title={title} wide>
       {scope === null ? (
         <div className="stack">
-          <p className="hint">Choose a category to view and download, or take everything with All over.</p>
+          <p className="hint">Choose a category to view and download as PDF, or take everything with All over.</p>
           <button className="export-cat all" type="button" onClick={() => setScope('all')}>
             <span className="export-cat-copy">
               <strong>All over</strong>
@@ -99,16 +92,11 @@ export function ExportExpenses({ open, onClose }: { open: boolean; onClose: () =
           <button
             className="btn btn-primary btn-block"
             type="button"
-            onClick={downloadCsv}
+            onClick={downloadExpensesPdf}
             disabled={rows.length === 0}
           >
-            Download {title} expenses
+            Download PDF
           </button>
-          {scope === 'all' ? (
-            <button className="btn btn-ghost btn-block" type="button" onClick={downloadFullBackup}>
-              Download full backup (for import)
-            </button>
-          ) : null}
           {rows.length === 0 ? (
             <div className="empty">
               <p>No expenses in this category yet.</p>

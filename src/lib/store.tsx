@@ -178,12 +178,20 @@ function reducer(data: AppData, action: Action): AppData {
           const sameDays = nextEnd === p.endDate
           const nextAmount = action.patch.amount
           const amountChanged = nextAmount !== undefined && nextAmount !== p.amount
+          const hadBudget = p.amount > 0
           const addedOnSameDays =
-            amountChanged && nextAmount !== undefined && nextAmount > p.amount && sameDays
-          const amountHistory = amountChanged
-            ? [p.amount, ...(p.amountHistory ?? [])]
-            : (p.amountHistory ?? [])
-          const extraFunds = sameDays ? p.extraFunds || addedOnSameDays : false
+            amountChanged &&
+            nextAmount !== undefined &&
+            nextAmount > p.amount &&
+            sameDays &&
+            hadBudget
+          const amountHistory =
+            amountChanged && hadBudget
+              ? [p.amount, ...(p.amountHistory ?? [])]
+              : amountChanged
+                ? []
+                : (p.amountHistory ?? [])
+          const extraFunds = sameDays ? Boolean(hadBudget && (p.extraFunds || addedOnSameDays)) : false
           return { ...p, ...action.patch, amountHistory, extraFunds }
         }),
       }

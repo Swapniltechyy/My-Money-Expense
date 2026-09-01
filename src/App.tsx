@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AddExpense } from './components/AddExpense'
 import { ExpenseDetail } from './components/ExpenseDetail'
-import { IconClose, IconHome, IconHistory, IconPlus, IconSettings, IconChart, IconWallet, IconPeople } from './components/Icons'
+import { IconClose, IconHome, IconHistory, IconPlus, IconSettings, IconChart, IconWallet, IconPeople, IconPower } from './components/Icons'
 import { QuickAdd } from './components/QuickAdd'
 import { ConfirmDialog } from './components/Sheet'
 import { ToastNotice } from './components/Toast'
@@ -11,7 +11,9 @@ import { AnalyticsPage } from './pages/AnalyticsPage'
 import { BudgetPage } from './pages/BudgetPage'
 import { HistoryPage } from './pages/HistoryPage'
 import { HomePage } from './pages/HomePage'
+import { LoginPage } from './pages/LoginPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { isLoggedIn, logout } from './lib/auth'
 import { useVisualViewportVars } from './lib/useVisualViewport'
 import type { ExpenseDraft, ExpenseItem, TabId } from './types'
 
@@ -20,6 +22,7 @@ type Screen = TabId | 'analytics' | 'additional'
 function ThemedApp() {
   const { data, toast, deleteItem } = useStore()
   useVisualViewportVars()
+  const [authed, setAuthed] = useState(() => isLoggedIn())
   const [tab, setTab] = useState<Screen>('home')
   const [addOpen, setAddOpen] = useState(false)
   const [addDraft, setAddDraft] = useState<ExpenseDraft | null>(null)
@@ -64,6 +67,22 @@ function ThemedApp() {
     setAddDraft(null)
     setQuickItem(null)
     window.scrollTo(0, 0)
+  }
+
+  function handleLogout() {
+    logout()
+    setMenuOpen(false)
+    setAuthed(false)
+  }
+
+  if (!authed) {
+    return (
+      <div className="shell">
+        <div className="frame login-frame">
+          <LoginPage onSuccess={() => setAuthed(true)} />
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -116,7 +135,7 @@ function ThemedApp() {
           {tab === 'history' ? <HistoryPage /> : null}
           {tab === 'budget' ? <BudgetPage /> : null}
           {tab === 'additional' ? <AdditionalPage /> : null}
-          {tab === 'settings' ? <SettingsPage /> : null}
+          {tab === 'settings' ? <SettingsPage onLogout={handleLogout} /> : null}
           {tab === 'analytics' ? <AnalyticsPage onClose={goHome} /> : null}
         </div>
       </div>
@@ -158,7 +177,12 @@ function ThemedApp() {
             >
               <IconHistory /> History
             </button>
-            <button onClick={goHome}>
+            <button
+              onClick={() => {
+                setTab('additional')
+                setMenuOpen(false)
+              }}
+            >
               <IconPeople /> Additional
             </button>
             <button
@@ -168,6 +192,9 @@ function ThemedApp() {
               }}
             >
               <IconSettings /> Settings
+            </button>
+            <button className="danger" onClick={handleLogout}>
+              <IconPower /> Log out
             </button>
           </aside>
         </div>

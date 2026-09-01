@@ -3,10 +3,13 @@ import { parseImport } from '../lib/storage'
 import { useStore } from '../lib/store'
 import { ConfirmDialog } from '../components/Sheet'
 import { ExportExpenses } from '../components/ExportExpenses'
+import { IconPower } from '../components/Icons'
+import { getAccount } from '../lib/auth'
 import { BudgetPage } from './BudgetPage'
 
-export function SettingsPage() {
+export function SettingsPage({ onLogout }: { onLogout: () => void }) {
   const { data, updateSettings, replaceData, resetData } = useStore()
+  const account = getAccount()
   const [confirmReset, setConfirmReset] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
   const [importError, setImportError] = useState('')
@@ -26,6 +29,17 @@ export function SettingsPage() {
   return (
     <div className="page pad-top">
       <h1 className="page-title">Settings</h1>
+
+      <section className="card">
+        <div className="account-head">
+          <h2>Account</h2>
+          {account?.name ? <p className="account-name">{account.name}</p> : <span />}
+        </div>
+        <button className="btn btn-ghost btn-block btn-logout" type="button" onClick={onLogout}>
+          <IconPower />
+          Log out
+        </button>
+      </section>
 
       <section className="card">
         <h2>Appearance</h2>

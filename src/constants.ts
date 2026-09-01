@@ -1,6 +1,8 @@
 import type { BuiltinCategoryId } from './types'
 
 export const STORAGE_KEY = 'my-money.v1'
+export const AUTH_KEY = 'my-money.auth.v1'
+export const SESSION_KEY = 'my-money.session.v1'
 
 export const CUSTOM_CATEGORY_COLORS = [
   '#0ea5e9',
