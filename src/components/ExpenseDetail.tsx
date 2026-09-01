@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { formatINR, parseAmount } from '../lib/currency'
 import { formatTime, shortDate } from '../lib/dates'
 import { itemStats } from '../lib/calc'
+import { selectableCategories } from '../lib/categories'
 import { useStore } from '../lib/store'
 import type { CategoryId, ExpenseItem, Purchase } from '../types'
 import { CategoryGlyph } from './CategoryGlyph'
@@ -124,9 +125,13 @@ export function ExpenseDetail({
       <EditPurchase
         key={editing?.id ?? 'closed'}
         purchase={editing}
+        category={item.category}
         onClose={() => setEditing(null)}
-        onSave={(next) => {
+        onSave={(next, nextCategory) => {
           updatePurchase(next)
+          if (nextCategory !== item.category) {
+            updateItem(item.id, item.name, nextCategory)
+          }
           setEditing(null)
         }}
       />
@@ -161,18 +166,21 @@ export function ExpenseDetail({
 
 function EditPurchase({
   purchase,
+  category: initialCategory,
   onClose,
   onSave,
 }: {
   purchase: Purchase | null
+  category: CategoryId
   onClose: () => void
-  onSave: (purchase: Purchase) => void
+  onSave: (purchase: Purchase, category: CategoryId) => void
 }) {
+  const { data } = useStore()
   const [amount, setAmount] = useState(purchase ? String(purchase.amount) : '')
-  const [date, setDate] = useState(purchase?.date ?? '')
-  const [time, setTime] = useState(purchase?.time ?? '')
+  const [category, setCategory] = useState<CategoryId>(initialCategory)
   const [notes, setNotes] = useState(purchase?.notes ?? '')
   const [error, setError] = useState('')
+  const categories = selectableCategories(data.customCategories, data.hiddenCategoryIds ?? [])
 
   if (!purchase) return null
 
@@ -187,23 +195,23 @@ function EditPurchase({
             setError('Amount must be greater than zero.')
             return
           }
-          onSave({ ...purchase, amount: value, date, time, notes })
+          onSave({ ...purchase, amount: value, notes }, category)
         }}
       >
         <label className="field">
           <span>Amount</span>
           <input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} />
         </label>
-        <div className="field-row">
-          <label className="field">
-            <span>Date</span>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-          </label>
-          <label className="field">
-            <span>Time</span>
-            <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-          </label>
-        </div>
+        <label className="field">
+          <span>Category</span>
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            {categories.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="field">
           <span>Notes</span>
           <input value={notes} onChange={(e) => setNotes(e.target.value)} />

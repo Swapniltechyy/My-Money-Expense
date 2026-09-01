@@ -1,7 +1,6 @@
 import type { AppData, CategoryId, Purchase } from '../types'
 import { resolveCategory, selectableCategories } from './categories'
 import { formatINR } from './currency'
-import { formatTime } from './dates'
 
 export type ExportScope = 'all' | CategoryId
 
@@ -12,14 +11,13 @@ export interface ExportRow {
   categoryLabel: string
 }
 
-export type ExportColumn = 'name' | 'category' | 'amount' | 'date' | 'time' | 'notes'
+export type ExportColumn = 'name' | 'category' | 'amount' | 'date' | 'notes'
 
 const COLUMN_LABEL: Record<ExportColumn, string> = {
   name: 'Name',
   category: 'Category',
   amount: 'Amount',
   date: 'Date',
-  time: 'Time',
   notes: 'Notes',
 }
 
@@ -49,7 +47,7 @@ export function exportRows(data: AppData, scope: ExportScope): ExportRow[] {
 export function exportColumns(rows: ExportRow[], scope: ExportScope): ExportColumn[] {
   const columns: ExportColumn[] = ['name']
   if (scope === 'all') columns.push('category')
-  columns.push('amount', 'date', 'time')
+  columns.push('amount', 'date')
   if (rows.some((row) => row.purchase.notes.trim())) columns.push('notes')
   return columns
 }
@@ -62,10 +60,10 @@ export function cellValue(row: ExportRow, column: ExportColumn): string {
       return row.categoryLabel
     case 'amount':
       return formatINR(row.purchase.amount)
-    case 'date':
-      return row.purchase.date
-    case 'time':
-      return formatTime(row.purchase.time)
+    case 'date': {
+      const [year, month, day] = row.purchase.date.split('-')
+      return year && month && day ? `${day}/${month}/${year}` : row.purchase.date
+    }
     case 'notes':
       return row.purchase.notes.trim()
   }
@@ -172,10 +170,14 @@ export function rowsToPdf(rows: ExportRow[], title: string, scope: ExportScope):
       })
       y -= rowH
     }
-    y -= 8
+    y -= 6
+    lines.push('ET')
+    lines.push(`${margin} ${y} m ${pageW - margin} ${y} l S`)
+    y -= 14
+    lines.push('BT')
     lines.push('/F2 9 Tf')
     lines.push(`1 0 0 1 ${margin} ${y} Tm`)
-    lines.push(`(${pdfEscape(`Total  ${formatINR(total)}   ·   ${rows.length} purchases`)}) Tj`)
+    lines.push(`(${pdfEscape(`Total ${formatINR(total)}`)}) Tj`)
     lines.push('/F1 8 Tf')
     lines.push(`1 0 0 1 ${margin} ${margin} Tm`)
     lines.push(`(${pdfEscape(`Page ${pageIndex + 1} of ${pageCount}`)}) Tj`)

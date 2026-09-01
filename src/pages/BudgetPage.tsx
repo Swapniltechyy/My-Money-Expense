@@ -27,6 +27,7 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
   const [error, setError] = useState('')
   const [confirmPeriod, setConfirmPeriod] = useState<string | null>(null)
   const [newAmount, setNewAmount] = useState('')
+  const pastPeriods = data.periods.filter((p) => p.id !== data.currentPeriodId).reverse()
 
   function saveCurrent() {
     const value = parseAmount(amount)
@@ -126,8 +127,11 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
       <section className="card">
         <h2>Past months</h2>
         <ul className="period-list">
-          {[...data.periods].reverse().map((p) => {
-            const spent = sumAmounts(purchasesInPeriod(data.purchases, p))
+          {pastPeriods.length === 0 ? (
+            <p className="hint">No past months yet.</p>
+          ) : pastPeriods.map((p) => {
+            const periodPurchases = purchasesInPeriod(data.purchases, p)
+            const spent = sumAmounts(periodPurchases)
             const remaining = remainingMoney(p, spent)
             const active = p.id === data.currentPeriodId
             return (
@@ -135,7 +139,11 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
                 <button type="button" onClick={() => switchPeriod(p.id)}>
                   <strong>{monthLabel(p.startDate)}</strong>
                   <p>
-                    {formatINR(spent)} spent · {formatINR(remaining)} left
+                    {periodPurchases.length > 0 ? (
+                      <>{formatINR(spent)} spent - {formatINR(remaining)} left</>
+                    ) : (
+                      'No transactions recorded.'
+                    )}
                   </p>
                   {active ? <em>Current</em> : null}
                 </button>

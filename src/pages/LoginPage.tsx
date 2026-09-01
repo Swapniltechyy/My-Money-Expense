@@ -5,8 +5,7 @@ import { accountExists, createAccount, hasAccount, login, resetPassword } from '
 type AuthMode = 'login' | 'create' | 'reset'
 
 export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
-  const registered = hasAccount()
-  const [mode, setMode] = useState<AuthMode>(registered ? 'login' : 'create')
+  const [mode, setMode] = useState<AuthMode>(hasAccount() ? 'login' : 'create')
   const [name, setName] = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm] = useState('')
@@ -16,11 +15,6 @@ export function LoginPage({ onSuccess }: { onSuccess: () => void }) {
   const [busy, setBusy] = useState(false)
 
   function switchMode(next: AuthMode) {
-    if (next === 'login' && !hasAccount()) {
-      setError('Register first to create an account.')
-      setMode('create')
-      return
-    }
     setMode(next)
     setError('')
     setNotice('')
