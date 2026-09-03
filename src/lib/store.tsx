@@ -323,6 +323,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadData)
   const [ready, setReady] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
+  // Ticks every minute so date-sensitive metrics (daysLeft, etc.) stay current
+  const [dateTick, setDateTick] = useState(() => todayISO())
 
   useEffect(() => {
     setReady(true)
@@ -332,6 +334,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (ready) saveData(data)
   }, [data, ready])
 
+  // Auto-refresh date tick — forces metrics recompute when real date advances
+  useEffect(() => {
+    const id = setInterval(() => setDateTick(todayISO()), 60_000)
+    return () => clearInterval(id)
+  }, [])
+
   const notify = useCallback((message: string) => {
     const id = createId()
     setToast({ id, message })
@@ -340,7 +348,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }, 2600)
   }, [])
 
-  const metrics = useMemo(() => dashboardMetrics(data), [data])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const metrics = useMemo(() => dashboardMetrics(data), [data, dateTick])
 
   const value = useMemo<StoreValue>(
     () => ({

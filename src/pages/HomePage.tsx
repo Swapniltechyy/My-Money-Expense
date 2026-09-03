@@ -69,12 +69,9 @@ export function HomePage({
         </div>
         <div className="metric-grid">
           <div>
-            <p className="muted">Days Left</p>
-            <p className="metric-value">
-              {budgetReady ? daysLeft : '—'}
-              <button className="icon-btn tiny" onClick={onBudget} aria-label="Budget calendar">
-                <IconCalendar size={16} />
-              </button>
+            <p className="muted">Remaining</p>
+            <p className={`metric-value ${budgetReady ? remainingTone : ''}`}>
+              {budgetReady ? formatINR(remaining) : '—'}
             </p>
           </div>
           <div>
@@ -82,9 +79,12 @@ export function HomePage({
             <p className="metric-value spend">{formatINR(spent)}</p>
           </div>
           <div>
-            <p className="muted">Remaining</p>
-            <p className={`metric-value ${budgetReady ? remainingTone : ''}`}>
-              {budgetReady ? formatINR(remaining) : '—'}
+            <p className="muted">Days Left</p>
+            <p className="metric-value">
+              {budgetReady ? daysLeft : '—'}
+              <button className="icon-btn tiny" onClick={onBudget} aria-label="Budget calendar">
+                <IconCalendar size={16} />
+              </button>
             </p>
           </div>
         </div>

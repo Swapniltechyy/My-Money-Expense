@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { formatINR, parseAmount } from '../lib/currency'
 import { purchasesInPeriod, remainingMoney, sumAmounts } from '../lib/calc'
 import { fromTodayBounds, monthLabel, todayISO } from '../lib/dates'
@@ -17,12 +17,29 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
     updateSettings,
   } = useStore()
   const period = metrics.period
-  const fromDate = todayISO()
+
+  // Live real-time date — refreshes every minute so it always shows actual today
+  const [fromDate, setFromDate] = useState(() => todayISO())
+  useEffect(() => {
+    const tick = () => {
+      const today = todayISO()
+      setFromDate(today)
+      // Auto-advance endDate to real month-end if today has moved past the saved value
+      setEndDate((prev) => {
+        const realMonthEnd = fromTodayBounds().endDate
+        return prev < today ? realMonthEnd : prev
+      })
+    }
+    const id = setInterval(tick, 60_000) // refresh every 60 s
+    tick() // run immediately on mount
+    return () => clearInterval(id)
+  }, [])
+
   const [amount, setAmount] = useState('')
   const [endDate, setEndDate] = useState(() => {
     const fallback = fromTodayBounds().endDate
     const saved = period?.endDate
-    return saved && saved >= fromDate ? saved : fallback
+    return saved && saved >= todayISO() ? saved : fallback
   })
   const [error, setError] = useState('')
   const [confirmPeriod, setConfirmPeriod] = useState<string | null>(null)

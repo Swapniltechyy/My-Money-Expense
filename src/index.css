@@ -243,6 +243,29 @@ h1, h2, h3, p { margin: 0; }
 .status-label.warning, .status-label.strong { color: var(--warn); }
 .status-label.reached, .status-label.exceeded { color: var(--spend); }
 .period-caption { margin-top: 10px; color: var(--muted); font-size: 12px; }
+.live-clock {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.live-date {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+.live-time {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
 .was-wrap {
   margin: 6px 0 0;
   position: relative;
