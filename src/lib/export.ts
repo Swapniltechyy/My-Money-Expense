@@ -123,7 +123,6 @@ export function rowsToPdf(rows: ExportRow[], title: string, scope: ExportScope):
     category: 1.1,
     amount: 1.1,
     date: 0.9,
-    time: 0.7,
     notes: 1.3,
   }
   const weightSum = columns.reduce((sum, col) => sum + weights[col], 0)
@@ -244,7 +243,7 @@ function assemblePdf(objectBodies: string[]): Uint8Array {
 
 export function downloadPdf(rows: ExportRow[], title: string, scope: ExportScope, filename: string) {
   const bytes = rowsToPdf(rows, title, scope)
-  const blob = new Blob([bytes], { type: 'application/pdf' })
+  const blob = new Blob([bytes as unknown as BlobPart], { type: 'application/pdf' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url

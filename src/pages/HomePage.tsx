@@ -117,7 +117,7 @@ export function HomePage({
 
       <section className="expenses-head">
         <h2>Expenses</h2>
-        <button className="btn btn-primary sm" onClick={onAdd}>
+        <button className="btn btn-primary sm" onClick={() => onAdd()}>
           Add Expense
         </button>
       </section>
@@ -126,7 +126,7 @@ export function HomePage({
         <div className="empty">
           <p>No expenses yet this month.</p>
           <p className="muted">Add your first purchase — repeat buys stay grouped in one row.</p>
-          <button className="btn btn-primary" onClick={onAdd}>
+          <button className="btn btn-primary" onClick={() => onAdd()}>
             Add Expense
           </button>
         </div>

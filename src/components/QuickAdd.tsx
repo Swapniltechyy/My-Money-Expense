@@ -181,7 +181,7 @@ export function HomeQuickAdd({
       {preview ? (
         <p className="quick-hint">
           Adds to {preview.name} · {options.find((c) => c.id === preview.category)?.label ?? 'Other'}.{' '}
-          <button type="button" className="text-link" onClick={onAddNew}>
+          <button type="button" className="text-link" onClick={() => onAddNew()}>
             Open full form
           </button>
         </p>

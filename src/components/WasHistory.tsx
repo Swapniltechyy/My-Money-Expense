@@ -25,7 +25,7 @@ export function WasHistory({ amounts }: { amounts: number[] }) {
         aria-haspopup="listbox"
         onClick={() => setOpen((value) => !value)}
       >
-        was
+        Previous
       </button>
       {open ? (
         <ul className="was-menu" role="listbox">

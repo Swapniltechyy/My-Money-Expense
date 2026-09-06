@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Authentication ──────────────────────────────────────────────────────────
+
+/// Registered user account. Stores credentials and profile info.
+model User {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  salt         String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relations
+  sessions         Session[]
+  expenseItems     ExpenseItem[]
+  purchases        Purchase[]
+  budgetPeriods    BudgetPeriod[]
+  appSettings      AppSettings?
+  customCategories CustomCategory[]
+  additionalNotes  AdditionalNote[]
+
+  @@map("users")
+}
+
+/// Active login session tied to a user. Enables token-based session management.
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+/// One-time password for email-based password reset.
+/// Codes expire after 10 minutes and are single-use.
+model Otp {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime @map("expires_at") @db.Timestamptz
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  @@index([email])
+  @@map("otps")
+}
+
+// ─── Application Data ────────────────────────────────────────────────────────
+
+/// Expense items represent unique products/services the user spends on.
+/// Each item belongs to a category and can have many purchases.
+model ExpenseItem {
+  id             String   @id
+  userId         String   @default("") @map("user_id")
+  name           String
+  normalizedName String   @map("normalized_name")
+  category       String
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchases Purchase[]
+
+  @@index([userId])
+  @@map("expense_items")
+}
+
+/// Individual purchase records tied to an expense item.
+/// Tracks amount, date, time, optional notes, and quantity.
+model Purchase {
+  id        String   @id
+  userId    String   @default("") @map("user_id")
+  itemId    String   @map("item_id")
+  amount    Decimal
+  date      DateTime @db.Date
+  time      String   @default("")
+  notes     String   @default("")
+  quantity  Decimal?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item ExpenseItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([itemId])
+  @@map("purchases")
+}
+
+/// Budget periods define a date range with a budget amount.
+/// Supports budget history tracking, extra funds, and carry-over from previous periods.
+model BudgetPeriod {
+  id               String   @id
+  userId           String   @default("") @map("user_id")
+  amount           Decimal  @default(0)
+  amountHistory    Json     @default("[]") @map("amount_history")
+  extraFunds       Boolean  @default(false) @map("extra_funds")
+  carryOverApplied Decimal  @default(0) @map("carry_over_applied")
+  startDate        DateTime @map("start_date") @db.Date
+  endDate          DateTime @map("end_date") @db.Date
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("budget_periods")
+}
+
+/// Per-user application settings including theme, notifications, and active budget period.
+model AppSettings {
+  userId               String   @id @default("") @map("user_id")
+  theme                String   @default("system")
+  carryOverUnused      Boolean  @default(false) @map("carry_over_unused")
+  notifyBudgetWarnings Boolean  @default(true) @map("notify_budget_warnings")
+  notifyDailyReminders Boolean  @default(false) @map("notify_daily_reminders")
+  currentPeriodId      String?  @map("current_period_id")
+  hiddenCategoryIds    Json     @default("[]") @map("hidden_category_ids")
+  updatedAt            DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("app_settings")
+}
+
+/// User-created custom expense categories with a display name and color.
+model CustomCategory {
+  id             String @id
+  userId         String @default("") @map("user_id")
+  name           String
+  normalizedName String @map("normalized_name")
+  color          String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("custom_categories")
+}
+
+/// Additional notes for tracking money lent/borrowed with people.
+model AdditionalNote {
+  id         String   @id
+  userId     String   @default("") @map("user_id")
+  personName String   @map("person_name")
+  amount     Decimal
+  notes      String   @default("")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("additional_notes")
+}

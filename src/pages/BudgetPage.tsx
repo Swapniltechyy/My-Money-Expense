@@ -56,7 +56,13 @@ export function BudgetPage({ onClose, embedded }: { onClose?: () => void; embedd
       setError('End date must be on or after today.')
       return
     }
-    updatePeriod({ amount: value, startDate: fromDate, endDate })
+    // Keep the original startDate so all purchases from the beginning stay counted.
+    const keepStart = period?.startDate ?? fromDate
+    // Add to existing budget instead of replacing:
+    // e.g. ₹15,000 existing + ₹2,000 new = ₹17,000 total
+    const existingAmount = period?.amount ?? 0
+    const newTotal = existingAmount > 0 ? existingAmount + value : value
+    updatePeriod({ amount: newTotal, startDate: keepStart, endDate })
     setError('')
     if (!embedded) setAmount('')
   }

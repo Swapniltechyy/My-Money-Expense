@@ -174,16 +174,13 @@ function reducer(data: AppData, action: Action): AppData {
         ...data,
         periods: data.periods.map((p) => {
           if (p.id !== data.currentPeriodId) return p
-          const nextEnd = action.patch.endDate ?? p.endDate
-          const sameDays = nextEnd === p.endDate
           const nextAmount = action.patch.amount
           const amountChanged = nextAmount !== undefined && nextAmount !== p.amount
           const hadBudget = p.amount > 0
-          const addedOnSameDays =
+          const addedMore =
             amountChanged &&
             nextAmount !== undefined &&
             nextAmount > p.amount &&
-            sameDays &&
             hadBudget
           const amountHistory =
             amountChanged && hadBudget
@@ -191,7 +188,7 @@ function reducer(data: AppData, action: Action): AppData {
               : amountChanged
                 ? []
                 : (p.amountHistory ?? [])
-          const extraFunds = sameDays ? Boolean(hadBudget && (p.extraFunds || addedOnSameDays)) : false
+          const extraFunds = Boolean(hadBudget && (p.extraFunds || addedMore))
           return { ...p, ...action.patch, amountHistory, extraFunds }
         }),
       }
