@@ -6,8 +6,16 @@ import { signToken, requireAuth, type AuthRequest } from '../middleware/auth'
 import { generateOtp, sendOtpEmail } from '../lib/mailer'
 
 const router = Router()
-const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
-const prisma = new PrismaClient({ adapter })
+
+let prisma: PrismaClient
+
+function getPrisma() {
+  if (!prisma) {
+    const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! })
+    prisma = new PrismaClient({ adapter })
+  }
+  return prisma
+}
 
 const SALT_ROUNDS = 10
 const OTP_EXPIRY_MINUTES = 10
@@ -42,7 +50,7 @@ router.post('/register', async (req, res) => {
     const trimmedName = name.trim()
 
     // Check if user already exists (case-insensitive)
-    const existingName = await prisma.user.findFirst({
+    const existingName = await getPrisma().user.findFirst({
       where: { name: { equals: trimmedName, mode: 'insensitive' } },
     })
     if (existingName) {
@@ -50,7 +58,7 @@ router.post('/register', async (req, res) => {
       return
     }
 
-    const existingEmail = await prisma.user.findFirst({
+    const existingEmail = await getPrisma().user.findFirst({
       where: { email: { equals: trimmedEmail, mode: 'insensitive' } },
     })
     if (existingEmail) {
@@ -62,7 +70,7 @@ router.post('/register', async (req, res) => {
     const salt = await bcrypt.genSalt(SALT_ROUNDS)
     const passwordHash = await bcrypt.hash(password, salt)
 
-    const user = await prisma.user.create({
+    const user = await getPrisma().user.create({
       data: {
         name: trimmedName,
         email: trimmedEmail,
@@ -72,7 +80,7 @@ router.post('/register', async (req, res) => {
     })
 
     // Create default app settings for the new user
-    await prisma.appSettings.create({
+    await getPrisma().appSettings.create({
       data: { userId: user.id },
     })
 
@@ -109,7 +117,7 @@ router.post('/login', async (req, res) => {
     const trimmedName = name.trim()
 
     // Find user (case-insensitive)
-    const user = await prisma.user.findFirst({
+    const user = await getPrisma().user.findFirst({
       where: { name: { equals: trimmedName, mode: 'insensitive' } },
     })
     if (!user) {
@@ -144,7 +152,7 @@ router.post('/login', async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const authReq = req as AuthRequest
-    const user = await prisma.user.findUnique({
+    const user = await getPrisma().user.findUnique({
       where: { id: authReq.userId },
       select: { id: true, name: true, createdAt: true },
     })
@@ -178,7 +186,7 @@ router.post('/forgot-password', async (req, res) => {
     const trimmedEmail = email.trim().toLowerCase()
 
     // Check if user exists
-    const user = await prisma.user.findFirst({
+    const user = await getPrisma().user.findFirst({
       where: { email: { equals: trimmedEmail, mode: 'insensitive' } },
     })
     if (!user) {
@@ -188,7 +196,7 @@ router.post('/forgot-password', async (req, res) => {
     }
 
     // Invalidate any existing unused OTPs for this email
-    await prisma.otp.updateMany({
+    await getPrisma().otp.updateMany({
       where: { email: trimmedEmail, used: false },
       data: { used: true },
     })
@@ -197,7 +205,7 @@ router.post('/forgot-password', async (req, res) => {
     const code = generateOtp()
     const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000)
 
-    await prisma.otp.create({
+    await getPrisma().otp.create({
       data: {
         email: trimmedEmail,
         code,
@@ -232,7 +240,7 @@ router.post('/verify-otp', async (req, res) => {
     const trimmedEmail = email.trim().toLowerCase()
     const trimmedCode = code.trim()
 
-    const otp = await prisma.otp.findFirst({
+    const otp = await getPrisma().otp.findFirst({
       where: {
         email: trimmedEmail,
         code: trimmedCode,
@@ -276,7 +284,7 @@ router.post('/reset-password', async (req, res) => {
     const trimmedCode = code.trim()
 
     // Re-verify OTP
-    const otp = await prisma.otp.findFirst({
+    const otp = await getPrisma().otp.findFirst({
       where: {
         email: trimmedEmail,
         code: trimmedCode,
@@ -292,7 +300,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     // Find the user
-    const user = await prisma.user.findFirst({
+    const user = await getPrisma().user.findFirst({
       where: { email: { equals: trimmedEmail, mode: 'insensitive' } },
     })
     if (!user) {
@@ -305,13 +313,13 @@ router.post('/reset-password', async (req, res) => {
     const passwordHash = await bcrypt.hash(newPassword, salt)
 
     // Update password
-    await prisma.user.update({
+    await getPrisma().user.update({
       where: { id: user.id },
       data: { passwordHash, salt },
     })
 
     // Mark OTP as used
-    await prisma.otp.update({
+    await getPrisma().otp.update({
       where: { id: otp.id },
       data: { used: true },
     })
