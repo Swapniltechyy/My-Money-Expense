@@ -21,7 +21,13 @@ async function authFetch<T>(url: string, body: object): Promise<T> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
-  const data = await res.json()
+  const text = await res.text()
+  let data: any
+  try {
+    data = JSON.parse(text)
+  } catch {
+    throw new Error(text || `Request failed with status ${res.status}`)
+  }
   if (!res.ok) {
     throw new Error((data as ApiError).error || 'Request failed.')
   }

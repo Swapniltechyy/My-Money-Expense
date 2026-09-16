@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import bcrypt from 'bcryptjs'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../../src/generated/prisma/client.js'
+import { PrismaClient } from '@prisma/client'
 import { signToken, requireAuth, type AuthRequest } from '../middleware/auth'
 import { generateOtp, sendOtpEmail } from '../lib/mailer'
 
