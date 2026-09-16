@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/**/*.ts": {
-      "includeFiles": "src/generated/prisma/**"
+      "includeFiles": "node_modules/.prisma/**"
     }
   },
   "rewrites": [
