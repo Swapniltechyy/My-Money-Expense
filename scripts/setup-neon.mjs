@@ -22,7 +22,6 @@ function loadEnvFile(filePath) {
 }
 
 const root = resolve(import.meta.dirname, '..')
-loadEnvFile(resolve(root, '.env.local'))
 loadEnvFile(resolve(root, '.env'))
 
 const databaseUrl = process.env.DATABASE_URL?.trim()
