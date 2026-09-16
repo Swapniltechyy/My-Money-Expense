@@ -1,6 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import authRoutes from '../server/routes/auth.js'
+import dataRoutes from '../server/routes/data.js'
 
 const app = express()
 
@@ -10,6 +11,7 @@ app.use(express.json())
 
 // Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/data', dataRoutes)
 
 // Health check
 app.get('/api/health', (_req, res) => {

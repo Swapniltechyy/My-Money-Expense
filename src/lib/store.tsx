@@ -5,6 +5,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type ReactNode,
 } from 'react'
@@ -24,6 +25,8 @@ import { nowTime, todayISO } from './dates'
 import { createId } from './id'
 import { displayName, findMatchingItems, normalizeName } from './normalize'
 import { createInitialData, createPeriod, loadData, saveData } from './storage'
+import { fetchUserData, syncUserData } from './api'
+import { isLoggedIn } from './auth'
 
 type Toast = { id: string; message: string }
 
@@ -312,6 +315,7 @@ interface StoreValue {
   addAdditional: (personName: string, amount: number, notes: string) => void
   updateAdditional: (note: AdditionalNote) => void
   deleteAdditional: (id: string) => void
+  reloadFromServer: () => Promise<void>
 }
 
 const StoreContext = createContext<StoreValue | null>(null)
@@ -320,15 +324,54 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadData)
   const [ready, setReady] = useState(false)
   const [toast, setToast] = useState<Toast | null>(null)
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // Ticks every minute so date-sensitive metrics (daysLeft, etc.) stay current
   const [dateTick, setDateTick] = useState(() => todayISO())
 
-  useEffect(() => {
-    setReady(true)
+  const reloadFromServer = useCallback(async () => {
+    if (!isLoggedIn()) return
+    try {
+      const remote = await fetchUserData()
+      if (remote) {
+        const local = loadData()
+        const remoteIsEmpty = remote.items.length === 0 && remote.purchases.length === 0
+        const localHasData = local.items.length > 0 || local.purchases.length > 0
+
+        // If server is clean/empty but local storage has user items, migrate to cloud!
+        if (remoteIsEmpty && localHasData) {
+          await syncUserData(local)
+          dispatch({ type: 'hydrate', data: local })
+        } else {
+          dispatch({ type: 'hydrate', data: remote })
+          saveData(remote)
+        }
+      }
+    } catch (err) {
+      console.error('Failed to load user data from database:', err)
+    }
   }, [])
 
   useEffect(() => {
-    if (ready) saveData(data)
+    reloadFromServer().finally(() => {
+      setReady(true)
+    })
+  }, [reloadFromServer])
+
+  useEffect(() => {
+    if (!ready) return
+
+    // Cache locally immediately
+    saveData(data)
+
+    // Sync to PostgreSQL database when authenticated
+    if (isLoggedIn()) {
+      if (syncTimer.current) clearTimeout(syncTimer.current)
+      syncTimer.current = setTimeout(() => {
+        syncUserData(data).catch((err) => {
+          console.error('Failed to sync changes with database:', err)
+        })
+      }, 600)
+    }
   }, [data, ready])
 
   // Auto-refresh date tick — forces metrics recompute when real date advances
@@ -443,8 +486,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'deleteAdditional', id })
         notify('Note removed')
       },
+      reloadFromServer,
     }),
-    [data, metrics, ready, toast, notify],
+    [data, metrics, ready, toast, notify, reloadFromServer],
   )
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>

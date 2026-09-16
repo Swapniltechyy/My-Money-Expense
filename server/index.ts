@@ -2,6 +2,7 @@ import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
 import authRoutes from './routes/auth.js'
+import dataRoutes from './routes/data.js'
 
 const app = express()
 const PORT = process.env.API_PORT || 3001
@@ -12,6 +13,7 @@ app.use(express.json())
 
 // Routes
 app.use('/api/auth', authRoutes)
+app.use('/api/data', dataRoutes)
 
 // Health check
 app.get('/api/health', (_req, res) => {

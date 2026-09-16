@@ -20,7 +20,7 @@ import type { ExpenseDraft, ExpenseItem, TabId } from './types'
 type Screen = TabId | 'analytics' | 'additional'
 
 function ThemedApp() {
-  const { data, toast, deleteItem } = useStore()
+  const { data, toast, deleteItem, reloadFromServer, resetData } = useStore()
   useVisualViewportVars()
   const [authed, setAuthed] = useState(() => isLoggedIn())
   const [tab, setTab] = useState<Screen>('home')
@@ -71,6 +71,7 @@ function ThemedApp() {
 
   function handleLogout() {
     logout()
+    resetData()
     setMenuOpen(false)
     setAuthed(false)
   }
@@ -79,7 +80,12 @@ function ThemedApp() {
     return (
       <div className="shell">
         <div className="frame login-frame">
-          <LoginPage onSuccess={() => setAuthed(true)} />
+          <LoginPage
+            onSuccess={async () => {
+              await reloadFromServer()
+              setAuthed(true)
+            }}
+          />
         </div>
       </div>
     )
